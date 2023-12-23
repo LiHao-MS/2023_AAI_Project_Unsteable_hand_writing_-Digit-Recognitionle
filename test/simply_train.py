@@ -33,7 +33,7 @@ for epoch in range(NUM_EPOCHS):  # 训练循环...省略了部分代码，如验
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * len(data), len(train_loader.dataset), 100. * batch_idx / len(train_loader), loss.item()))
     losses.append(train_loss / len(train_loader))  # 计算并保存每个epoch的平均损失
     print('Epoch: {}, Average Train Loss: {:.6f}'.format(epoch, train_loss / len(train_loader)))
-    if (epoch + 1) % SAVE_EVERY == 0:
+    if (epoch + 1) % SAVE_EVERY == 0 and epoch　> 1000: # 每隔SAVE_EVERY个epoch保存一次模型
         model_path = os.path.join('./models/sub_models/', f'model_epoch_{epoch + 1}.pth')
         torch.save(model.state_dict(), model_path)
         print(f'Model saved to {model_path}')
