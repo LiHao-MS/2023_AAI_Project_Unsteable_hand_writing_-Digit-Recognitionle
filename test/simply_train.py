@@ -17,7 +17,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 criterion = nn.NLLLoss()  # 使用负对数似然损失，因为我们使用了log_softmax作为输出层激活函数。如果使用softmax，请使用CrossEntropyLoss。
 model.train()
 losses = [] # 记录每个epoch的loss
-SAVE_EVERY = 10  # 定义每隔多少个epoch保存一次模型
+SAVE_EVERY = 100  # 定义每隔多少个epoch保存一次模型
 
 for epoch in range(NUM_EPOCHS):  # 训练循环...省略了部分代码，如验证等。请自行添加。
     train_loss = 0.0
@@ -33,7 +33,7 @@ for epoch in range(NUM_EPOCHS):  # 训练循环...省略了部分代码，如验
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * len(data), len(train_loader.dataset), 100. * batch_idx / len(train_loader), loss.item()))
     losses.append(train_loss / len(train_loader))  # 计算并保存每个epoch的平均损失
     print('Epoch: {}, Average Train Loss: {:.6f}'.format(epoch, train_loss / len(train_loader)))
-    if (epoch + 1) % SAVE_EVERY == 0 and epoch　> 1000: # 每隔SAVE_EVERY个epoch保存一次模型
+    if (epoch + 1) % SAVE_EVERY == 0 and epoch > 1000: # 每隔SAVE_EVERY个epoch保存一次模型
         model_path = os.path.join('./models/sub_models/', f'model_epoch_{epoch + 1}.pth')
         torch.save(model.state_dict(), model_path)
         print(f'Model saved to {model_path}')
