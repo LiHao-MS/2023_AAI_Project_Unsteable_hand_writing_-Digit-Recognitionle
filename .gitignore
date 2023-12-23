@@ -2,3 +2,4 @@
 /processed_data/test/*
 /.idea/
 __pycache__/
+*.pdf
