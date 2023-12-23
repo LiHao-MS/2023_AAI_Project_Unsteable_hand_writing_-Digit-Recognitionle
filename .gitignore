@@ -1,3 +1,4 @@
-/processed_data/*
+/processed_data/train/*
+/processed_data/test/*
 /.idea/
 __pycache__/
