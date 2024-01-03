@@ -4,9 +4,9 @@ import torch
 
 
 class HandwrittenDigitModel(nn.Module):
-    def __init__(self):
+    def __init__(self, input_channel, hidden_dim):
         super(HandwrittenDigitModel, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, 3, 1, padding=0)
+        self.conv1 = nn.Conv2d(input_channel, 32, 3, 1, padding=0)
         self.conv2 = nn.Conv2d(32, 64, 3, 1, padding=0)
         self.conv3 = nn.Conv2d(64, 32, 3, 1, padding=0)
         self.dropout1 = nn.Dropout(0.15)
@@ -16,7 +16,7 @@ class HandwrittenDigitModel(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)
-        x = F.sigmoid(x)
+        x = F.relu(x)
         x = self.conv2(x)
         x = F.relu(x)
         x = F.max_pool2d(x, 2)

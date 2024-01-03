@@ -1,7 +1,8 @@
+
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-data = np.load("./processed_data/processed_data/train/5/1110.npy")
+data = np.load("./processed_data/val/8/61.npy")
 print(data.shape)
 # 遍历每张图像并显示  
 for i in range(data.shape[0]):
