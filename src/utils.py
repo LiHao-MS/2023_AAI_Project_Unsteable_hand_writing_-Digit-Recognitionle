@@ -54,10 +54,12 @@ def get_val_acc(val_loader, model1, model2, DEVICE):
 def base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer,model2, model1, criterion, SAVE_EVERY, val_loader, name):
     best = 0
     losses = []  # 记录每个epoch的loss
+    acc = []
     for epoch in range(NUM_EPOCHS):  # 训练循环
         model1.train()
         model2.train()
         train_loss = 0.0
+        train_acc = 0.0
         for batch_idx, (data, target) in enumerate(train_loader):  # 迭代加载数据
             data, target = data.to(DEVICE), target.to(DEVICE)  # 将数据转移到正确的设备上
             optimizer.zero_grad()  # 清空梯度缓存
@@ -66,7 +68,9 @@ def base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer,model2, model
             loss.backward()  # 反向传播，计算梯度
             optimizer.step()  # 更新权重
             train_loss += loss.item()
+            train_acc += torch.sum((torch.argmax(output, dim=1) == target).float()).item()
         losses.append(train_loss / len(train_loader))  # 计算并保存每个epoch的平均损失
+        acc.append(train_acc / len(train_loader))
         # print('Epoch: {}, Average Train Loss: {:.6f}'.format(epoch, train_loss / len(train_loader)))
         if (epoch + 1) % SAVE_EVERY == 0 and epoch > 50:  # 每隔SAVE_EVERY个epoch保存一次模型
             cur_acc = get_val_acc(val_loader, model1, model2, DEVICE)
@@ -75,7 +79,7 @@ def base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer,model2, model
                 torch.save(model1.state_dict(), model1_path)
                 model2_path = os.path.join('./models/', name+'_model2_best.pth')
                 torch.save(model2.state_dict(), model2_path)
-    return losses, model1, model2
+    return losses, acc, model1, model2
 
 def draw_loss(losses, title='Training Loss over Epochs'):
     plt.plot(losses)
@@ -91,10 +95,9 @@ def free_data(train_dataset, train_loader, val_dataset,val_loader):
     del val_dataset
     del val_loader
 
-def save_drae(model1, model2, losses, name, val_loader, DEVICE):
+def save(model1, model2, name, val_loader, DEVICE):
     torch.save(model1.state_dict(), './models/' + name + '_final_model1.pth')
     torch.save(model2.state_dict(), './models/' + name + '_final_model2.pth')
-    draw_loss(losses, title=name + '_loss')
     final_acc = get_val_acc(val_loader, model1, model2, DEVICE)
     print(name + "final acc:{}".format(final_acc))
 
@@ -122,3 +125,47 @@ def squeeze_batch(batch):
         res[k] = v[0]
 
     return res
+
+def to_cuda(d, DEVICE):
+    '''
+        convert the input dict to DEVICE
+    '''
+    for k, v in d.items():
+        d[k] = v.to(DEVICE)
+
+    return d
+
+def draw_two(loss1, loss2, name, name1, name2):
+    # 创建一个新的figure对象
+    plt.figure()
+    # 绘制模型1的loss曲线，label参数用于设置图例名称
+    plt.plot(loss1, label=name1)
+    # 绘制模型2的loss曲线
+    plt.plot(loss2, label=name2)
+    # 添加图例
+    plt.legend()
+    # 设置x轴标签
+    plt.xlabel('Epochs')
+    # 设置y轴标签
+    plt.ylabel(name)
+    plt.savefig('./pic/{}.png'.format(name))
+    # 显示图形
+    plt.cla()
+
+def draw_three(loss1, loss2, loss3, name, name1, name2, name3):
+    # 创建一个新的figure对象
+    plt.figure()
+    # 绘制模型1的loss曲线，label参数用于设置图例名称
+    plt.plot(loss1, label=name1)
+    # 绘制模型2的loss曲线
+    plt.plot(loss2, label=name2)
+    plt.plot(loss3, label=name3)
+    # 添加图例
+    plt.legend()
+    # 设置x轴标签
+    plt.xlabel('Epochs')
+    # 设置y轴标签
+    plt.ylabel(name)
+    plt.savefig('./pic/{}.png'.format(name))
+    # 显示图形
+    plt.cla()

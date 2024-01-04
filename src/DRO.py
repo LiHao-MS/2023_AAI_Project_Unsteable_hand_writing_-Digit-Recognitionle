@@ -1,10 +1,11 @@
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 from collections import defaultdict
-from utils import compute_l2, squeeze_batch
+from utils import compute_l2, squeeze_batch, to_cuda
 from sklearn import metrics
 from sklearn.cluster import k_means
 import numpy as np
+import torch.nn.functional as F
 from collections import Counter
 
 def get_all_class_loaders(models, dataloader, DEVICE):
@@ -44,8 +45,6 @@ def get_all_class_loaders(models, dataloader, DEVICE):
 
         all_correct_datasets[label] = correct_dataloader
         all_wrong_datasets[label] = wrong_dataloader
-
-
     return all_correct_datasets, all_wrong_datasets
 
 
@@ -62,7 +61,7 @@ def get_two_class_loaders(models, dataloader, DEVICE):
         data, target = data.to(DEVICE), target.to(DEVICE)  # 将数据转移到正确的设备上
         outputs = model(data)
         predict = torch.argmax(outputs, dim=1)
-        correct = torch.equal(target, predict)
+        correct = target == predict
         correct_data.append(data[correct])
         correct_data_label.append(target[correct])
         wrong_data.append(data[~correct])
@@ -84,36 +83,34 @@ def get_two_class_loaders(models, dataloader, DEVICE):
 
     return correct_dataloader, wrong_dataloader
 
-def train_presentation(train_loaders, model, opt):
+def train_presentation(train_loaders, model, opt, DEVICE, NUM_EPOCHS):
     n_group_pairs = len(train_loaders)
-    for batches in zip(*train_loaders):
-        # work on each batch
+    for epoch in range(NUM_EPOCHS):  # 训练循环
         model.train()
-        for i in range(n_group_pairs//2):
-            x_pos = (squeeze_batch(batches[i*2]))['X']
-            x_neg = (squeeze_batch(batches[i*2+1]))['X']
+        for batches in zip(*train_loaders):
+            for i in range(n_group_pairs//2):
+                x_pos = to_cuda(squeeze_batch(batches[i*2]), DEVICE)['X']
+                x_neg = to_cuda(squeeze_batch(batches[i*2+1]), DEVICE)['X']
 
-            min_size = min(len(x_pos), len(x_neg))
-            x_pos = x_pos[:min_size]
-            x_neg = x_neg[:min_size]
+                min_size = min(len(x_pos), len(x_neg))
+                x_pos = x_pos[:min_size]
+                x_neg = x_neg[:min_size]
 
-            ebd_pos = model(x_pos)
-            ebd_neg = model(x_neg)
+                ebd_pos = model(x_pos)
+                ebd_neg = model(x_neg)
 
-            diff_pos_pos = compute_l2(ebd_pos, ebd_pos)
-            diff_pos_neg = compute_l2(ebd_pos, ebd_neg)
-            # diff_neg_neg = compute_l2(ebd_neg, ebd_neg)
+                diff_pos_pos = compute_l2(ebd_pos, ebd_pos)
+                diff_pos_neg = compute_l2(ebd_pos, ebd_neg)
+                # diff_neg_neg = compute_l2(ebd_neg, ebd_neg)
 
-            loss = (
-                torch.mean(torch.max(torch.zeros_like(diff_pos_pos),
-                                    diff_pos_pos - diff_pos_neg +
-                                    torch.ones_like(diff_pos_pos) * 0.3)))
-
-            loss /= n_group_pairs
-            loss.backward()
-
-        opt.step()
-        opt.zero_grad()
+                loss = (
+                    torch.mean(torch.max(torch.zeros_like(diff_pos_pos),
+                                        diff_pos_pos - diff_pos_neg +
+                                        torch.ones_like(diff_pos_pos) * 0.3)))
+                loss /= n_group_pairs
+                loss.backward()
+            opt.step()
+            opt.zero_grad()
     return model
 
 '''
@@ -121,7 +118,7 @@ def train_presentation(train_loaders, model, opt):
         1. Convert all input examples into the unstable feature representation
         space.
         2. Cluster the feature representation
-    '''
+'''
 def get_clusters(model, dataloader, DEVICE):
     model.eval()
     groups = {}
@@ -202,6 +199,56 @@ def get_clusters_to_dataloaders(model, dataloader, DEVICE):
 
     return dataloaders
 
+def dro_train_process(train_loaders, models, opt, DEVICE, NUM_EPOCHS):
+    losses = []
+    acces = []
+    # n_group_pairs = len(train_loaders)
+    for nuum in range(NUM_EPOCHS):
+        model1 = models[0]
+        model2 = models[1]
 
+        # every two loaders are paired together
+        for batches in zip(*train_loaders):
+            # work on each batch
+            model1.train()
+            model2.train()
+
+            x, y = [], []
+
+            for batch in batches:
+                for idx, (data, target) in enumerate(batch):
+                    x.append(data.to(DEVICE))
+                    y.append(target.to(DEVICE))
+
+            pred = model2(model1(torch.cat(x, dim=0)))
+            worst_loss = 0
+
+            avg_loss = 0
+            avg_acc = 0
+            cur_idx = 0
+            for cur_true in y:
+                cur_pred = pred[cur_idx:cur_idx+len(cur_true)]
+                cur_idx += len(cur_true)
+
+                loss = F.cross_entropy(cur_pred, cur_true)
+                acc = torch.mean((torch.argmax(cur_pred, dim=1) == cur_true).float()).item()
+
+                avg_loss += loss.item()
+                avg_acc += acc
+
+                if loss.item() > worst_loss:
+                    worst_loss = loss
+
+            opt.zero_grad()
+            worst_loss.backward()
+            opt.step()
+
+            avg_loss /= len(y)
+            avg_acc /= len(y)
+            losses.append(avg_loss)
+            acces.append(avg_acc)
+
+
+    return losses, acces, model1, model2
 
 
