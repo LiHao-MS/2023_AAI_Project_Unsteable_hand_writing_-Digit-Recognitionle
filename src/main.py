@@ -1,6 +1,3 @@
-
-
-
 from dataset import HandwrittenDigitsDataset
 from CNN_model import CnnM
 from mlp_model import MLP
@@ -13,7 +10,7 @@ import torch.nn.functional as F
 from utils import *
 BATCH_SIZE = 64
 LEARNING_RATE = 0.001 # 学习率
-NUM_EPOCHS = 1000 # 根据需要调整epoch数量
+NUM_EPOCHS = 500 # 根据需要调整epoch数量
 WEIGHT_DECAY = 0.01 # 学习率衰减
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 SAVE_EVERY = 10
@@ -28,13 +25,10 @@ def train1():
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
     optimizer = torch.optim.Adam(list(model1.parameters()) + list(model2.parameters()), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
     criterion = F.cross_entropy
-    losses,model1, model2 = base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer, model2, model1, criterion, SAVE_EVERY, val_loader, name)
-    #训练完成后，保存模型：
-    torch.save(model1.state_dict(), './models/' + name + '_final_model1.pth')
-    torch.save(model2.state_dict(), './models/' + name + '_final_model2.pth')
-    draw_loss(losses, title=name+'_loss')
-    final_acc = get_val_acc(val_loader, model1, model2, DEVICE)
-    print("type1 final acc:{}".format(final_acc))
+    losses, model1, model2 = base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer, model2, model1, criterion, SAVE_EVERY, val_loader, name)
+    #训练完成后，保存模型
+    save_drae(model1, model2, losses, name, val_loader, DEVICE)
+    free_data(train_dataset, train_loader, val_dataset, val_loader)
 
 def train2():
     name = "type2"
@@ -49,16 +43,19 @@ def train2():
     criterion = F.cross_entropy
     losses, model1, model2 = base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer, model2, model1, criterion,
                                                 SAVE_EVERY, val_loader,name)
-    # 训练完成后，保存模型：
-    torch.save(model1.state_dict(), './models/'+name+'_final_model1.pth')
-    torch.save(model2.state_dict(), './models/'+name+'_final_model2.pth')
-    draw_loss(losses, title=name+'_loss')
-    final_acc = get_val_acc(val_loader, model1, model2, DEVICE)
-    print("type2 final acc:{}".format(final_acc))
+    # 训练完成后，保存模型
+    save_drae(model1, model2, losses, name, val_loader, DEVICE)
+    free_data(train_dataset, train_loader, val_dataset, val_loader)
 
 def train3():
+    name = "type3"
+    model1 = CnnM(input_channel=10, hidden_dim=300).to(DEVICE)
+    model2 = MLP(input_dim=300, output_dim=10).to(DEVICE)
     print("dro")
 
 if __name__ == "__main__":
+    print("start")
     train1()
+    print("finish train1")
     train2()
+    print("finish train2")

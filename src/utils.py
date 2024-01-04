@@ -74,7 +74,7 @@ def base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer,model2, model
                 model1_path = os.path.join('./models/', name+'_model1_best.pth')
                 torch.save(model1.state_dict(), model1_path)
                 model2_path = os.path.join('./models/', name+'_model2_best.pth')
-                torch.save(model1.state_dict(), model2_path)
+                torch.save(model2.state_dict(), model2_path)
     return losses, model1, model2
 
 def draw_loss(losses, title='Training Loss over Epochs'):
@@ -83,4 +83,42 @@ def draw_loss(losses, title='Training Loss over Epochs'):
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.savefig('./pic/'+title+'.png')
+    plt.cla()
 
+def free_data(train_dataset, train_loader, val_dataset,val_loader):
+    del train_dataset
+    del train_loader
+    del val_dataset
+    del val_loader
+
+def save_drae(model1, model2, losses, name, val_loader, DEVICE):
+    torch.save(model1.state_dict(), './models/' + name + '_final_model1.pth')
+    torch.save(model2.state_dict(), './models/' + name + '_final_model2.pth')
+    draw_loss(losses, title=name + '_loss')
+    final_acc = get_val_acc(val_loader, model1, model2, DEVICE)
+    print(name + "final acc:{}".format(final_acc))
+
+def compute_l2(XS, XQ):
+    '''
+        Compute the pairwise l2 distance
+        @param XS (support x): support_size x ebd_dim
+        @param XQ (support x): query_size x ebd_dim
+
+        @return dist: query_size x support_size
+
+    '''
+    diff = XS.unsqueeze(0) - XQ.unsqueeze(1)
+    dist = torch.norm(diff, dim=2)
+
+    return dist ** 2
+
+def squeeze_batch(batch):
+    '''
+        squeeze the first dim in a batch
+    '''
+    res = {}
+    for k, v in batch.items():
+        assert len(v) == 1
+        res[k] = v[0]
+
+    return res
