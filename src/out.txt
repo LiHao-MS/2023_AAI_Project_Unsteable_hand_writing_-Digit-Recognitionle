@@ -1,0 +1,63 @@
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+start
+finish train2
+type49final acc:0.73
+start
+type1final acc:0.75
+finish train1
+type2final acc:0.7
+finish train2
+type3v1final acc:0.04
+type3v2final acc:0.06
+finish train3

@@ -71,7 +71,6 @@ def base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer,model2, model
             train_acc += torch.sum((torch.argmax(output, dim=1) == target).float()).item()
         losses.append(train_loss / len(train_loader))  # 计算并保存每个epoch的平均损失
         acc.append(train_acc / len(train_loader))
-        # print('Epoch: {}, Average Train Loss: {:.6f}'.format(epoch, train_loss / len(train_loader)))
         if (epoch + 1) % SAVE_EVERY == 0 and epoch > 50:  # 每隔SAVE_EVERY个epoch保存一次模型
             cur_acc = get_val_acc(val_loader, model1, model2, DEVICE)
             if cur_acc > best:
@@ -81,19 +80,9 @@ def base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer,model2, model
                 torch.save(model2.state_dict(), model2_path)
     return losses, acc, model1, model2
 
-def draw_loss(losses, title='Training Loss over Epochs'):
-    plt.plot(losses)
-    plt.title(title)
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.savefig('./pic/'+title+'.png')
-    plt.cla()
-
-def free_data(train_dataset, train_loader, val_dataset,val_loader):
-    del train_dataset
-    del train_loader
-    del val_dataset
-    del val_loader
+def free_data(*args):
+    for i in args:
+        del i
 
 def save(model1, model2, name, val_loader, DEVICE):
     torch.save(model1.state_dict(), './models/' + name + '_final_model1.pth')
@@ -120,9 +109,9 @@ def squeeze_batch(batch):
         squeeze the first dim in a batch
     '''
     res = {}
-    for k, v in batch.items():
+    for k, v in batch:
         assert len(v) == 1
-        res[k] = v[0]
+        res[k] = v
 
     return res
 
@@ -130,42 +119,28 @@ def to_cuda(d, DEVICE):
     '''
         convert the input dict to DEVICE
     '''
-    for k, v in d.items():
+    for k, v in d:
         d[k] = v.to(DEVICE)
 
     return d
 
-def draw_two(loss1, loss2, name, name1, name2):
+def draw_pic(*args, name):
+    length = len(args)//2
+    losses = args[:length]
+    names = args[length:]
     # 创建一个新的figure对象
     plt.figure()
     # 绘制模型1的loss曲线，label参数用于设置图例名称
-    plt.plot(loss1, label=name1)
-    # 绘制模型2的loss曲线
-    plt.plot(loss2, label=name2)
+    for loss, line_name in zip(losses, names):
+        plt.plot(loss, label=line_name)
     # 添加图例
     plt.legend()
     # 设置x轴标签
     plt.xlabel('Epochs')
     # 设置y轴标签
-    plt.ylabel(name)
+    if "ACC" in name:
+        plt.ylabel("ACCURACY")
+    else:
+        plt.ylabel("LOSS")
     plt.savefig('./pic/{}.png'.format(name))
-    # 显示图形
-    plt.cla()
-
-def draw_three(loss1, loss2, loss3, name, name1, name2, name3):
-    # 创建一个新的figure对象
-    plt.figure()
-    # 绘制模型1的loss曲线，label参数用于设置图例名称
-    plt.plot(loss1, label=name1)
-    # 绘制模型2的loss曲线
-    plt.plot(loss2, label=name2)
-    plt.plot(loss3, label=name3)
-    # 添加图例
-    plt.legend()
-    # 设置x轴标签
-    plt.xlabel('Epochs')
-    # 设置y轴标签
-    plt.ylabel(name)
-    plt.savefig('./pic/{}.png'.format(name))
-    # 显示图形
     plt.cla()

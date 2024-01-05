@@ -1,0 +1,12 @@
+200 epoch, 400 dro epoch
+start
+type1final acc:0.75
+finish train1
+type2final acc:0.74
+finish train2
+type3v1final acc:0.16
+type3v2final acc:0.16
+finish train3
+type4v1final acc:0.12
+type4v2final acc:0.11
+finish train4
