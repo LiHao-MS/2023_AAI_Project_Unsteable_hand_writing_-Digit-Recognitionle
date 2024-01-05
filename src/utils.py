@@ -82,13 +82,14 @@ def base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer,model2, model
 
 def free_data(*args):
     for i in args:
-        del i
+        i = None
 
 def save(model1, model2, name, val_loader, DEVICE):
     torch.save(model1.state_dict(), './models/' + name + '_final_model1.pth')
     torch.save(model2.state_dict(), './models/' + name + '_final_model2.pth')
     final_acc = get_val_acc(val_loader, model1, model2, DEVICE)
     print(name + "final acc:{}".format(final_acc))
+    free_data(model1, model2, val_loader)
 
 def compute_l2(XS, XQ):
     '''
@@ -104,25 +105,25 @@ def compute_l2(XS, XQ):
 
     return dist ** 2
 
-def squeeze_batch(batch):
-    '''
-        squeeze the first dim in a batch
-    '''
-    res = {}
-    for k, v in batch:
-        assert len(v) == 1
-        res[k] = v
-
-    return res
-
-def to_cuda(d, DEVICE):
-    '''
-        convert the input dict to DEVICE
-    '''
-    for k, v in d:
-        d[k] = v.to(DEVICE)
-
-    return d
+# def squeeze_batch(batch):
+#     '''
+#         squeeze the first dim in a batch
+#     '''
+#     res = {}
+#     for k, v in batch:
+#         assert len(v) == 1
+#         res[k] = v
+#
+#     return res
+#
+# def to_cuda(d, DEVICE):
+#     '''
+#         convert the input dict to DEVICE
+#     '''
+#     for k, v in d:
+#         d[k] = v.to(DEVICE)
+#
+#     return d
 
 def draw_pic(*args, name):
     length = len(args)//2
@@ -144,3 +145,25 @@ def draw_pic(*args, name):
         plt.ylabel("LOSS")
     plt.savefig('./pic/{}.png'.format(name))
     plt.cla()
+
+def drw_all(losses, accs):
+    loss1, loss2, loss3, losses1, losses2, losses3, losses4 = losses
+    acc1, acc2, acc3, acces1, acces2, acces3, acces4 = accs
+    draw_pic(loss1, loss2, loss3, "BASE MODEL1", "BASE MODEL2", "BASE FAKE MODEL", name="BASE MODELS LOSS")
+    draw_pic(acc1, acc2, acc3, "BASE MODEL1", "BASE MODEL2", "BASE FAKE MODEL", name="BASE MODELS ACCURACY")
+
+    draw_pic(loss3, losses1, losses2, "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2", name="BASE DRO MODELS' LOSS")
+    draw_pic(acc3, acces1, acces2, "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2", name="BASE DRO MODELS' ACCURACY")
+    draw_pic(loss1, loss2, loss3, losses1, losses2, "BASE MODEL1", "BASE MODEL2", "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2",
+             name="COMPARE MODELS' LOSS")
+    draw_pic(acc1, acc2, acc3, acces1, acces2, "BASE MODEL1", "BASE MODEL2", "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2",
+             name="COMPARE MODELS' ACCURACY")
+
+    draw_pic(loss3, losses3, losses4, "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2", name="BASE DRO MODELS' LOSS")
+    draw_pic(acc3, acces3, acces4, "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2", name="BASE DRO MODELS' ACCURACY")
+    draw_pic(loss1, loss2, loss3, losses1, losses2, losses3, losses4, "BASE MODEL1", "BASE MODEL2", "BASE FAKE MODEL", "BASE DRO MODEL1",
+             "BASE DRO MODEL2", "FINAL DRO MODEL1", "FINAL DRO MODEL2",
+             name="COMPARE ALL MODELS' LOSS")
+    draw_pic(acc1, acc2, acc3, acces1, acces2, acces3, acces4, "BASE MODEL1", "BASE MODEL2",  "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2",
+             "FINAL DRO MODEL1", "FINAL DRO MODEL2",
+             name="COMPARE ALL MODELS' ACCURACY")
