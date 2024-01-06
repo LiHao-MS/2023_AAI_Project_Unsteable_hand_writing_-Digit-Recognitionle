@@ -6,10 +6,15 @@ import os
 
 
 class HandwrittenDigitsDataset(Dataset):
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir, transform=None, odd=False, even=False):
         self.root_dir = root_dir
         self.transform = transform
-        self.classes = [str(i) for i in range(10)]
+        if not odd and not even:
+            self.classes = [str(i) for i in range(10)]
+        elif odd:
+            self.classes = [str(i * 2 + 1) for i in range(5)]
+        else:
+            self.classes = [str(i * 2) for i in range(5)]
         self.data = []
         self.targets = []
         # 遍历每个目录，加载数据

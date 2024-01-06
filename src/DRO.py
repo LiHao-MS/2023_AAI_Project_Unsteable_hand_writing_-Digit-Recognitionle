@@ -16,23 +16,22 @@ def get_all_class_loaders(models, dataloader, DEVICE):
     wrong_datasets = defaultdict(list)
     correct_labels = defaultdict(list)
     wrong_labels = defaultdict(list)
-
-    for batch_idx, (data, target) in enumerate(dataloader):
-        data, target = data.to(DEVICE), target.to(DEVICE)  # 将数据转移到正确的设备上
-        outputs = model(data)
-        predict = torch.argmax(outputs, dim=1)
-        for i in range(len(target)):
-            label = target[i]
-            pred = predict[i]
-            if label == pred:
-                key = int(label.cpu().int().item())
-                correct_datasets[key].append(data[i])
-                correct_labels[key].append(label)
-            else:
-                key = int(label.cpu().int().item())
-                wrong_datasets[key].append(data[i])
-                wrong_labels[key].append(label)
-
+    with torch.no_grad():
+        for batch_idx, (data, target) in enumerate(dataloader):
+            data, target = data.to(DEVICE), target.to(DEVICE)  # 将数据转移到正确的设备上
+            outputs = model(data)
+            predict = torch.argmax(outputs, dim=1)
+            for i in range(len(target)):
+                label = target[i]
+                pred = predict[i]
+                if label == pred:
+                    key = int(label.cpu().int().item())
+                    correct_datasets[key].append(data[i])
+                    correct_labels[key].append(label)
+                else:
+                    key = int(label.cpu().int().item())
+                    wrong_datasets[key].append(data[i])
+                    wrong_labels[key].append(label)
 
     all_correct_datasets = {}
     all_wrong_datasets = {}
@@ -59,17 +58,16 @@ def get_two_class_loaders(models, dataloader, DEVICE,BATCH_SIZE):
     correct_data_label = []
     wrong_data = []
     wrong_data_label = []
-
-    for batch_idx, (data, target) in enumerate(dataloader):
-        data, target = data.to(DEVICE), target.to(DEVICE)  # 将数据转移到正确的设备上
-        outputs = model(data)
-        predict = torch.argmax(outputs, dim=1)
-        correct = target == predict
-        correct_data.append(data[correct])
-        correct_data_label.append(target[correct])
-        wrong_data.append(data[~correct])
-        wrong_data_label.append(target[~correct])
-
+    with torch.no_grad():
+        for batch_idx, (data, target) in enumerate(dataloader):
+            data, target = data.to(DEVICE), target.to(DEVICE)  # 将数据转移到正确的设备上
+            outputs = model(data)
+            predict = torch.argmax(outputs, dim=1)
+            correct = target == predict
+            correct_data.append(data[correct])
+            correct_data_label.append(target[correct])
+            wrong_data.append(data[~correct])
+            wrong_data_label.append(target[~correct])
     # 因为每次迭代返回的是一个批次的数据，最后需要将所有批次的结果合并
     correct_data = torch.cat(correct_data, dim=0)
     correct_data_label = torch.cat(correct_data_label, dim=0)
@@ -88,8 +86,8 @@ def get_two_class_loaders(models, dataloader, DEVICE,BATCH_SIZE):
 
 def train_presentation(train_loaders, model, opt, DEVICE, NUM_EPOCHS):
     n_group_pairs = len(train_loaders)
+    model.train()
     for epoch in range(NUM_EPOCHS):  # 训练循环
-        model.train()
         for batches in zip(*train_loaders):
             for i in range(n_group_pairs//2):
                 pos_data, pos_label = batches[i*2]
@@ -110,7 +108,6 @@ def train_presentation(train_loaders, model, opt, DEVICE, NUM_EPOCHS):
                     torch.mean(torch.max(torch.zeros_like(diff_pos_pos),
                                         diff_pos_pos - diff_pos_neg +
                                         torch.ones_like(diff_pos_pos) * 0.3)))
-                # loss /= n_group_pairs
                 loss.backward()
             opt.step()
             opt.zero_grad()
@@ -121,8 +118,8 @@ def get_clusters(model, dataloader, DEVICE):
     model.eval()
     groups = {}
     with torch.no_grad():
-        for batch_idx, (data, target) in enumerate(dataloader):  # 迭代加载数据
-            data, target = data.to(DEVICE), target.to(DEVICE)  # 将数据转移到正确的设备上
+        for batch_idx, (data, target) in enumerate(dataloader):
+            data, target = data.to(DEVICE), target.to(DEVICE)
             output = model(data)  # 前向传播
             x_s = output.detach().cpu().numpy()
             y_s = target.detach().cpu().numpy()
@@ -131,8 +128,7 @@ def get_clusters(model, dataloader, DEVICE):
                     groups[int(y)] = {"encoder":[], "data":[]}
                 groups[int(y)]["encoder"].append(x)
                 groups[int(y)]["data"].append(da)
-    dataloaders=[]
-    # clusters = {}
+    dataloaders = []
     for k, v in groups.items():
         x = np.stack(v["encoder"], axis=0)
         cur_clusters = {}
@@ -141,13 +137,14 @@ def get_clusters(model, dataloader, DEVICE):
             if cluster_id not in cur_clusters:
                 cur_clusters[cluster_id] = []
             cur_clusters[cluster_id].append(data)
-        # clusters[k] = cur_clusters
+
         for key in cur_clusters.keys():
-            data = torch.stack(cur_clusters[key], dim=0)
-            target = torch.ones(len(cur_clusters[key])) * k
-            dataset = TensorDataset(data, target)
-            dataloader = DataLoader(dataset, batch_size=dataloader.batch_size, shuffle=True)
-            dataloaders.append(dataloader)
+            data_ = torch.stack(cur_clusters[key], dim=0)
+            target_ = torch.ones(len(cur_clusters[key])) * k
+            dataset_ = TensorDataset(data_, target_)
+            dataloader_ = DataLoader(dataset_, batch_size=dataloader.batch_size, shuffle=True)
+            dataloaders.append(dataloader_)
+            print("cluster {},label:{}, length:{}".format(k, key, len(data_)))
     return dataloaders
 
 

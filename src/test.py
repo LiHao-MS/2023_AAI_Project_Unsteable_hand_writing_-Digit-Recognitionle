@@ -1,10 +1,20 @@
-import json
-from utils import *
+import numpy as np
+import matplotlib.pyplot as plt
 
-# 打开并加载json文件中的数据
-with open('list_data.json', 'r') as f:
-    loaded_data = json.load(f)
-
-draw_pic(loaded_data['loss1'], loaded_data['loss2'], loaded_data['losses1'], loaded_data['losses2'], loaded_data['losses3'], loaded_data['losses4'],
-         "BASE MODEL1", "BASE MODEL2", "BASE DRO MODEL1", "BASE DRO MODEL2", "FINAL DRO MODEL1", "FINAL DRO MODEL2",
-         name="ttest")
+# 读取npz文件
+# data = np.load('../processed_data/val/0/25.npy')
+#
+# # 假设你的npz文件中有一个名为'tensor'的键对应10x28x28的tensor
+# # tensor = data['tensor']
+#
+# fig, axes = plt.subplots(nrows=1, ncols=10, figsize=(10, 10))
+# for i in range(10):
+#     img = data[i].reshape(28, 28)
+#     axes[i].imshow(img, cmap='gray')
+#     axes[i].axis('off')
+#
+# plt.show()
+d1 = [str(i*2) for i in range(5)]
+d2 = [str(i*2+1) for i in range(5)]
+for i, j in zip(d1, d2):
+    print(i, j)

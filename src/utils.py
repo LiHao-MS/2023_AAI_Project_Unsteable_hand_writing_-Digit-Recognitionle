@@ -71,13 +71,13 @@ def base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer,model2, model
             train_acc += torch.sum((torch.argmax(output, dim=1) == target).float()).item()
         losses.append(train_loss / len(train_loader))  # 计算并保存每个epoch的平均损失
         acc.append(train_acc / len(train_loader))
-        if (epoch + 1) % SAVE_EVERY == 0 and epoch > 50:  # 每隔SAVE_EVERY个epoch保存一次模型
-            cur_acc = get_val_acc(val_loader, model1, model2, DEVICE)
-            if cur_acc > best:
-                model1_path = os.path.join('./models/', name+'_model1_best.pth')
-                torch.save(model1.state_dict(), model1_path)
-                model2_path = os.path.join('./models/', name+'_model2_best.pth')
-                torch.save(model2.state_dict(), model2_path)
+        # if (epoch + 1) % SAVE_EVERY == 0 and epoch > 50:  # 每隔SAVE_EVERY个epoch保存一次模型
+        #     cur_acc = get_val_acc(val_loader, model1, model2, DEVICE)
+        #     if cur_acc > best:
+        #         model1_path = os.path.join('./models2/', name+'_model1_best.pth')
+        #         torch.save(model1.state_dict(), model1_path)
+        #         model2_path = os.path.join('./models2/', name+'_model2_best.pth')
+        #         torch.save(model2.state_dict(), model2_path)
     return losses, acc, model1, model2
 
 def free_data(*args):
@@ -89,7 +89,7 @@ def save(model1, model2, name, val_loader, DEVICE):
     torch.save(model2.state_dict(), './models/' + name + '_final_model2.pth')
     final_acc = get_val_acc(val_loader, model1, model2, DEVICE)
     print(name + "final acc:{}".format(final_acc))
-    free_data(model1, model2, val_loader)
+    free_data(model1, model2)
 
 def compute_l2(XS, XQ):
     '''
@@ -104,26 +104,6 @@ def compute_l2(XS, XQ):
     dist = torch.norm(diff, dim=2)
 
     return dist ** 2
-
-# def squeeze_batch(batch):
-#     '''
-#         squeeze the first dim in a batch
-#     '''
-#     res = {}
-#     for k, v in batch:
-#         assert len(v) == 1
-#         res[k] = v
-#
-#     return res
-#
-# def to_cuda(d, DEVICE):
-#     '''
-#         convert the input dict to DEVICE
-#     '''
-#     for k, v in d:
-#         d[k] = v.to(DEVICE)
-#
-#     return d
 
 def draw_pic(*args, name):
     length = len(args)//2
@@ -146,7 +126,7 @@ def draw_pic(*args, name):
     plt.savefig('./pic/{}.png'.format(name))
     plt.cla()
 
-def drw_all(losses, accs):
+def draw_all(losses, accs):
     loss1, loss2, loss3, losses1, losses2, losses3, losses4 = losses
     acc1, acc2, acc3, acces1, acces2, acces3, acces4 = accs
     draw_pic(loss1, loss2, loss3, "BASE MODEL1", "BASE MODEL2", "BASE FAKE MODEL", name="BASE MODELS LOSS")
@@ -167,3 +147,9 @@ def drw_all(losses, accs):
     draw_pic(acc1, acc2, acc3, acces1, acces2, acces3, acces4, "BASE MODEL1", "BASE MODEL2",  "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2",
              "FINAL DRO MODEL1", "FINAL DRO MODEL2",
              name="COMPARE ALL MODELS' ACCURACY")
+
+def draw_odd(losses, accs):
+    loss1, loss2, loss3 = losses
+    acc1, acc2, acc3 = accs
+    draw_pic(loss1, loss2, loss3, "FAKE MODEL ON ODD", "CORRECT MODEL ON EVEN", "FINAL MODEL", name="MODELS LOSS")
+    draw_pic(acc1, acc2, acc3, "FAKE MODEL ON ODD", "CORRECT MODEL ON EVEN", "FINAL MODEL", name="MODELS ACCURACY")
