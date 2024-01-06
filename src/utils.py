@@ -132,15 +132,17 @@ def draw_all(losses, accs):
     draw_pic(loss1, loss2, loss3, "BASE MODEL1", "BASE MODEL2", "BASE FAKE MODEL", name="BASE MODELS LOSS")
     draw_pic(acc1, acc2, acc3, "BASE MODEL1", "BASE MODEL2", "BASE FAKE MODEL", name="BASE MODELS ACCURACY")
 
-    draw_pic(loss3, losses1, losses2, "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2", name="BASE DRO MODELS' LOSS")
-    draw_pic(acc3, acces1, acces2, "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2", name="BASE DRO MODELS' ACCURACY")
+    draw_pic(loss3, losses1, losses2, "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2",
+             name="BASE DRO MODELS' LOSS")
+    draw_pic(acc3, acces1, acces2, "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2",
+             name="BASE DRO MODELS' ACCURACY")
     draw_pic(loss1, loss2, loss3, losses1, losses2, "BASE MODEL1", "BASE MODEL2", "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2",
              name="COMPARE MODELS' LOSS")
     draw_pic(acc1, acc2, acc3, acces1, acces2, "BASE MODEL1", "BASE MODEL2", "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2",
              name="COMPARE MODELS' ACCURACY")
 
-    draw_pic(loss3, losses3, losses4, "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2", name="BASE DRO MODELS' LOSS")
-    draw_pic(acc3, acces3, acces4, "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2", name="BASE DRO MODELS' ACCURACY")
+    draw_pic(loss3, losses3, losses4, "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2", name="DRO MODELS' LOSS")
+    draw_pic(acc3, acces3, acces4, "BASE FAKE MODEL", "BASE DRO MODEL1", "BASE DRO MODEL2", name="DRO MODELS' ACCURACY")
     draw_pic(loss1, loss2, loss3, losses1, losses2, losses3, losses4, "BASE MODEL1", "BASE MODEL2", "BASE FAKE MODEL", "BASE DRO MODEL1",
              "BASE DRO MODEL2", "FINAL DRO MODEL1", "FINAL DRO MODEL2",
              name="COMPARE ALL MODELS' LOSS")
