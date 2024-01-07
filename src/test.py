@@ -16,14 +16,8 @@ HIDDEN_DIM = 300
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model1 = CnnM(input_channel=10, hidden_dim=HIDDEN_DIM).to(DEVICE)
 model2 = MLP(input_dim=HIDDEN_DIM, output_dim=10).to(DEVICE)
-# train_dataset = HandwrittenDigitsDataset('../processed_data/train', transform=IdentityTransform())
-# val_dataset = HandwrittenDigitsDataset("../processed_data/val", transform=IdentityTransform())
-# test_dataset = TestDataset('../processed_data/test')
-# train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-# val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
-# test_loader = DataLoader(test_dataset,batch_size=BATCH_SIZE, shuffle=False)
 
-def test_acc(model_path, loader):
+def test_acc(model1, model2,model_path, loader):
     model1.load_state_dict(torch.load(model_path+'1.pth', map_location=DEVICE))
     model2.load_state_dict(torch.load(model_path+'2.pth', map_location=DEVICE))
     model1.eval()
@@ -78,9 +72,7 @@ def test_res():
     model2.load_state_dict(torch.load(model_path+'2.pth', map_location=DEVICE))
     model1.eval()
     model2.eval()
-    correct = 0
-    total = 0
-    with open("./res.txt", 'w') as f:
+    with open("../res.txt", 'w') as f:
         with torch.no_grad():
             for batch_idx, (data, target) in enumerate(test_loader):  # 迭代加载数据
                 data = data.to(DEVICE) # 将数据转移到正确的设备上

@@ -6,12 +6,28 @@ import os
 
 
 class TestDataset(Dataset):
+    """
+        A custom dataset class to load and handle .npy files for training or testing.
+
+        Args:
+            root_dir (str): The directory path containing the .npy data files.
+            transform (callable, optional): A function/transform that takes in a sample
+                and applies transformations. Defaults to None.
+            odd (bool, optional): If True, only include odd-indexed files. Default is False.
+            even (bool, optional): If True, only include even-indexed files. Default is False.
+
+        Attributes:
+            root_dir (str): Directory path of the dataset.
+            transform (callable): Data transformation function if provided.
+            data (list): List of loaded and converted torch tensors from .npy files.
+            target (list): List of file names corresponding to each tensor in 'data'.
+    """
     def __init__(self, root_dir, transform=None, odd=False, even=False):
         self.root_dir = root_dir
         self.transform = transform
         self.data = []
         self.target = []
-        # 遍历每个目录，加载数据
+        # Iterate through all files in the specified directory
         for file_name in os.listdir(root_dir):
             file_path = os.path.join(root_dir, file_name)
             # Check if the file is a .npy file

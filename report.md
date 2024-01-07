@@ -29,7 +29,7 @@ class MLP(nn.Module):
         self.fc = nn.Linear(input_dim, output_dim)
     ...
 ```
-###	Strategies selection
+###	Strategies Selection
 Distributionally Robust Optimization (DRO) is an optimization framework designed for decision-making under uncertainty. Unlike traditional methods that rely on a single, precise probabilistic model, DRO considers a set of plausible distributions consistent with empirical data.
 
 In essence, DRO seeks solutions that perform well across all distributions within an ambiguity set rather than optimizing solely for the best-case scenario based on point estimates. This robustness protects against potential inaccuracies in the estimated probability distribution and enhances model resilience against misspecification and changes in the data-generating process. In practical applications, DRO necessitates ensuring that the optimization considers only the most adverse loss scenario from among all possible distributions, thereby taking a backward-looking, conservative approach.
@@ -52,7 +52,7 @@ For evaluation, we trained six models: two base models, one fake model learning 
 
 ## Experiment 
 
-### Base models and fake model
+### Base Models and Fake Model
 
 Firstly, we trained three basic models—Base Models 1 & 2 and the Fake Model — for 60 epochs. The base models were designed to recognize digits without interference from unstable features through data preprocessing.
 
@@ -61,7 +61,7 @@ Firstly, we trained three basic models—Base Models 1 & 2 and the Fake Model �
 <br style="clear: both;">
 </br>
 
-|models|accuracy on val dataset|
+|Models|Accuracy on Val Dataset|
 |---|---|
 |Base Model 1|0.77|
 |Base Model 2|0.76|
@@ -80,7 +80,7 @@ Next, we trained models with a simple DRO strategy for 400 epochs. Under DRO, we
 <br style="clear: both;">
 </br>
 
-|models|accuracy on val dataset|
+|Models|Accuracy on Val Dataset|
 |---|---|
 |DRO Model 1|0.36|
 |DRO Model 2|0.35|
@@ -92,11 +92,11 @@ The results show that the simple DRO strategy only marginally improves the learn
 With TOFU, we processed the data into 20 datasets based on correct and incorrect predictions by the Fake Model, enhancing representation differences between classes and similarities within classes. We then clustered these data into 20 clusters using K-means from scikit-learn, ensuring each label had two clusters. Finally, we trained the clusters using the DRO strategy.
 
 <img src="./pics/COMPARE_ALL_MODELS_LOSS.png" width="45%" style="float: left; margin-right: 10px;">
-<img src="./pics/COMPARE_MODELS_ACCURACY.png" width="45%" style="float: left;">
+<img src="./pics/COMPARE_ALL_MODELS_ACCURACY.png" width="45%" style="float: left;">
 <br style="clear: both;">
 </br>
 
-|models|accuracy on val dataset|
+|Models|Accuracy on Val Dataset|
 |---|---|
 |TOFU Model 1|0.63|
 |TOFU Model 2|0.75|
@@ -105,7 +105,7 @@ The graphs and tables demonstrate that the TOFU models successfully recognized d
 
 ## Member Contributions
 
-All members contributed equally to the project. Specifically, Li Hao led the overall strategy and conducted experiments, Jiang Tao implemented the code, and Yuan Fei wrote the reports.
+All members contributed equally to the project. Specifically, Li Hao led the overall strategy and conducted experiments, Jiang Tao implemented the code, and Yuan Fei wrote the reports and contribute to the team discussions.
 
 ## References
 [1] Bao, Yujia, Shiyu Chang, and Regina Barzilay. "Learning stable classifiers by transferring unstable features." International Conference on Machine Learning. PMLR, 2022.
@@ -116,6 +116,15 @@ All members contributed equally to the project. Specifically, Li Hao led the ove
 
 ## Appendix
 
+### Running Instructions
+```
+cd src
+python main.py --model 1/2/3 --json_name file_name 
+# There are three models: 0 is training model, 1 is run test model which will generate res.txt, 2 is evaluation model which will generate the pictures of loss and accuracy.
+# json_name used as the name of file which save losses and accuracies data during training
+# For simply, you can run 'python main.py' which will run model 1 defautly.
+```
+### Other Details
 There are certain details not mentioned previously.
 
 |Sets|Detail|

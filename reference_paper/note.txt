@@ -1,6 +1,0 @@
-tofu
-网络cnn 只有一层全连接，输出的是hindden_dim 
-mlp单独成立，输入hidden_dim，中间可能有几层全连接，默认无，输出output_dim=10
-
-cnn 和 mlp 一起训练，放在同一个torch.optim.Adam()里
-
