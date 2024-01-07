@@ -123,29 +123,29 @@ def draw_pic(*args, name):
 def draw_all(losses, accs):
     loss1, loss2, loss3, losses1, losses2, losses3, losses4 = losses
     acc1, acc2, acc3, acces1, acces2, acces3, acces4 = accs
-    draw_pic(loss1, loss2, loss3, "BASE MODEL1", "BASE MODEL2", "FAKE MODEL", name="BASE MODELS LOSS")
-    draw_pic(acc1, acc2, acc3, "BASE MODEL1", "BASE MODEL2", "FAKE MODEL", name="BASE MODELS ACCURACY")
+    draw_pic(loss1, loss2, loss3, "BASE MODEL1", "BASE MODEL2", "FAKE MODEL", name="BASE_MODELS_LOSS")
+    draw_pic(acc1, acc2, acc3, "BASE MODEL1", "BASE MODEL2", "FAKE MODEL", name="BASE_MODELS_ACCURACY")
 
     draw_pic(loss3, losses1, losses2, "FAKE MODEL", "DRO MODEL1", "DRO MODEL2",
-             name="BASE DRO MODELS' LOSS")
+             name="BASE_DRO_MODELS_LOSS")
     draw_pic(acc3, acces1, acces2, "FAKE MODEL", "DRO MODEL1", "DRO MODEL2",
-             name="BASE DRO MODELS' ACCURACY")
+             name="BASE_DRO_MODELS_ACCURACY")
     draw_pic(loss1, loss2, loss3, losses1, losses2, "BASE MODEL1", "BASE MODEL2", "FAKE MODEL", "DRO MODEL1", "DRO MODEL2",
-             name="COMPARE MODELS' LOSS")
+             name="COMPARE_MODELS_LOSS")
     draw_pic(acc1, acc2, acc3, acces1, acces2, "BASE MODEL1", "BASE MODEL2", "FAKE MODEL", "DRO MODEL1", "DRO MODEL2",
-             name="COMPARE MODELS' ACCURACY")
+             name="COMPARE_MODELS_ACCURACY")
 
     draw_pic(loss3, losses3, losses4, "FAKE MODEL", "DRO MODEL1", "DRO MODEL2", name="DRO MODELS' LOSS")
     draw_pic(acc3, acces3, acces4, "FAKE MODEL", "DRO MODEL1", "DRO MODEL2", name="DRO MODELS' ACCURACY")
     draw_pic(loss1, loss2, loss3, losses1, losses2, losses3, losses4, "BASE MODEL1", "BASE MODEL2", "FAKE MODEL", "DRO MODEL1",
              "BASE DRO MODEL2", "TOFU MODEL1", "TOFU MODEL2",
-             name="COMPARE ALL MODELS' LOSS")
+             name="COMPARE_ALL_MODELS_LOSS")
     draw_pic(acc1, acc2, acc3, acces1, acces2, acces3, acces4, "BASE MODEL1", "BASE MODEL2",  "FAKE MODEL", "DRO MODEL1", "DRO MODEL2",
              "TOFU MODEL1", "TOFU MODEL2",
-             name="COMPARE ALL MODELS' ACCURACY")
+             name="COMPARE_ALL_MODELS_ACCURACY")
 
 def draw_odd(losses, accs):
     loss1, loss2, loss3 = losses
     acc1, acc2, acc3 = accs
-    draw_pic(loss1, loss2, loss3, "FAKE MODEL ON ODD", "CORRECT MODEL ON EVEN", "FINAL MODEL", name="MODELS LOSS")
-    draw_pic(acc1, acc2, acc3, "FAKE MODEL ON ODD", "CORRECT MODEL ON EVEN", "FINAL MODEL", name="MODELS ACCURACY")
+    draw_pic(loss1, loss2, loss3, "FAKE MODEL ON ODD", "CORRECT MODEL ON EVEN", "FINAL MODEL", name="MODELS_LOSS")
+    draw_pic(acc1, acc2, acc3, "FAKE MODEL ON ODD", "CORRECT MODEL ON EVEN", "FINAL MODEL", name="MODELS_ACCURACY")
