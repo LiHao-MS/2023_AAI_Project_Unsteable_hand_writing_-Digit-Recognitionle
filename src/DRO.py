@@ -35,18 +35,18 @@ def get_all_class_loaders(models, dataloader, DEVICE):
 
     all_correct_datasets = {}
     all_wrong_datasets = {}
-    for label in correct_datasets.keys():
-        correct_data = torch.stack(correct_datasets[label], dim=0)
-        wrong_data = torch.stack(wrong_datasets[label], dim=0)
+    for label_ in correct_datasets.keys():
+        correct_data = torch.stack(correct_datasets[label_], dim=0)
+        wrong_data = torch.stack(wrong_datasets[label_], dim=0)
 
-        correct_dataset = TensorDataset(correct_data, torch.tensor(correct_labels[label]))
-        wrong_dataset = TensorDataset(wrong_data, torch.tensor(wrong_labels[label]))
+        correct_dataset = TensorDataset(correct_data, torch.tensor(correct_labels[label_]))
+        wrong_dataset = TensorDataset(wrong_data, torch.tensor(wrong_labels[label_]))
 
         correct_dataloader = DataLoader(correct_dataset, batch_size=dataloader.batch_size, shuffle=True)
         wrong_dataloader = DataLoader(wrong_dataset, batch_size=dataloader.batch_size, shuffle=True)
 
-        all_correct_datasets[label] = correct_dataloader
-        all_wrong_datasets[label] = wrong_dataloader
+        all_correct_datasets[label_] = correct_dataloader
+        all_wrong_datasets[label_] = wrong_dataloader
     return all_correct_datasets, all_wrong_datasets
 
 
@@ -69,10 +69,10 @@ def get_two_class_loaders(models, dataloader, DEVICE,BATCH_SIZE):
             wrong_data.append(data[~correct])
             wrong_data_label.append(target[~correct])
     # 因为每次迭代返回的是一个批次的数据，最后需要将所有批次的结果合并
-    correct_data = torch.cat(correct_data, dim=0)
-    correct_data_label = torch.cat(correct_data_label, dim=0)
-    wrong_data = torch.cat(wrong_data, dim=0)
-    wrong_data_label = torch.cat(wrong_data_label, dim=0)
+    correct_data = torch.cat(correct_data, dim=0).cpu()
+    correct_data_label = torch.cat(correct_data_label, dim=0).cpu()
+    wrong_data = torch.cat(wrong_data, dim=0).cpu()
+    wrong_data_label = torch.cat(wrong_data_label, dim=0).cpu()
 
     # 创建新的TensorDataset
     correct_dataset = TensorDataset(correct_data, correct_data_label)
@@ -145,26 +145,28 @@ def get_clusters(model, dataloader, DEVICE):
             dataloader_ = DataLoader(dataset_, batch_size=dataloader.batch_size, shuffle=True)
             dataloaders.append(dataloader_)
             print("cluster {},label:{}, length:{}".format(k, key, len(data_)))
+    print("total cluster:{}".format(len(dataloaders)))
     return dataloaders
 
 
 def dro_train_process(train_loaders, models, opt, DEVICE, NUM_EPOCHS):
     losses = []
     acces = []
+    model1 = models[0]
+    model2 = models[1]
     # n_group_pairs = len(train_loaders)
     for num in range(NUM_EPOCHS):
-        model1 = models[0]
-        model2 = models[1]
-        avg_loss = 0
-        avg_acc = 0
-        avg_len = 0
+        cur_loss = 0
+        cur_acc = 0
+        cur_len = 0
         model1.train()
         model2.train()
 
         # every two loaders are paired together
         for batches in zip(*train_loaders):
             # work on each batch
-            
+            worse_acc = 0
+            worst_len = 0
             x, y = [], []
             for batche in batches:
                 data, target = batche
@@ -180,19 +182,16 @@ def dro_train_process(train_loaders, models, opt, DEVICE, NUM_EPOCHS):
                 loss = F.cross_entropy(cur_pred, cur_true.long())
                 if loss.item() > worst_loss:
                     worst_loss = loss
-                    avg_loss += loss.item()
-                    avg_len += len(cur_true)
-                    avg_acc += torch.mean((torch.argmax(cur_pred, dim=1) == cur_true).float()).item()
-
+                    worst_len = len(cur_true)
+                    worse_acc = torch.sum((torch.argmax(cur_pred, dim=1) == cur_true).float()).item()
+            cur_loss += worst_loss.item()
+            cur_acc += worse_acc
+            cur_len += worst_len
             opt.zero_grad()
             worst_loss.backward()
             opt.step()
-
-        avg_loss /= avg_len
-        avg_acc /= avg_len
-        losses.append(avg_loss)
-        acces.append(avg_acc)
-
+        losses.append(cur_loss / cur_len)
+        acces.append(cur_acc / cur_len)
 
     return losses, acces, model1, model2
 

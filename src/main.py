@@ -9,9 +9,9 @@ from MLP_train import train_MLP
 
 BATCH_SIZE = 100  # 根据需要调整batch大小
 LEARNING_RATE = 0.001  # 学习率
-NUM_EPOCHS = 100 # 根据需要调整epoch数量
-DRO_NUM_EPOCH = 300
-WEIGHT_DECAY = 0.01  # 学习率衰减
+NUM_EPOCHS = 60 # 根据需要调整epoch数量
+DRO_NUM_EPOCH = 400
+WEIGHT_DECAY = 0.001  # 学习率衰减
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 SAVE_EVERY = 10
 HIDDEN_DIM = 300
@@ -116,13 +116,14 @@ def train4():
             continue
         loaders.append(all_correct_datasets[i])
         loaders.append(all_wrong_datasets[i])
-        
+    print("train4: all loaders {}".format(loaders))
+
     optimizer2 = torch.optim.Adam(list(model1.parameters()), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
     model3 = train_presentation(loaders, model1, optimizer2, DEVICE, NUM_EPOCHS)
     
     del all_correct_datasets, all_wrong_datasets, loaders
     
-    loaders = get_clusters(model3, val_loader, DEVICE)
+    loaders = get_clusters(model3, train_loader, DEVICE)
     
     del model3
     
@@ -139,8 +140,7 @@ def train4():
     optimizer4 = torch.optim.Adam(list(model4.parameters()) + list(model5.parameters()), lr=LEARNING_RATE,
                                  weight_decay=WEIGHT_DECAY)
     models = [model4, model5]
-    losses2, acces2, model4, model5 = dro_train_process(loaders, models, optimizer4, DEVICE, DRO_NUM_EPOCH )
-    
+    losses2, acces2, model4, model5 = dro_train_process(loaders, models, optimizer4, DEVICE, DRO_NUM_EPOCH)
 
     save(model4, model5, name + "v2", val_loader, DEVICE)
     return losses1, losses2, acces1, acces2
@@ -190,11 +190,40 @@ def train_last(file):
         f.write('\n')
     return losses1, losses2, losses3, losses4, acces1, acces2, acces3, acces4
 
-if __name__ == "__main__":
-    file_name = "./json/LossAndAcc"
-    # train_MLP()
-    loss1, loss2, loss3, acc1, acc2, acc3 = train_first(file_name)
-    losses1, losses2, losses3, losses4, acces1, acces2, acces3, acces4 = train_last(file_name)
+def res_show():
+    with open("./json/LossAndAcc.json", 'r') as f:
+       record = json.load(f)
+    loss1 = record['loss1']
+    loss2 = record['loss2']
+    loss3 = record['loss_fake']
+    acc1 = record['acc1']
+    acc2 = record['acc2']
+    acc3 = record['acc_fake']
+    losses1 = [i*100 for i in record['losses1']]
+    losses2 = [i*100 for i in record['losses2']]
+    losses3 = [i*100 for i in record['losses3']]
+    losses4 = [i*100 for i in record['losses4']]
+    acces1 = [i*100 for i in record['acces1']]
+    acces2 = [i*100 for i in record['acces2']]
+    acces3 = [i*100 for i in record['acces3']]
+    acces4 = [i*100 for i in record['acces4']]
     losses = [loss1, loss2, loss3, losses1, losses2, losses3, losses4]
     accs = [acc1, acc2, acc3, acces1, acces2, acces3, acces4]
     draw_all(losses, accs)
+
+if __name__ == "__main__":
+    res_show()
+    file_name = "./json/LossAndAcc"
+    # # loss1, loss2, loss3, acc1, acc2, acc3 = train_first(file_name)
+    # losses1, losses2, losses3, losses4, acces1, acces2, acces3, acces4 = train_last(file_name)
+    # with open("./json/LossAndAcc.json", 'r') as f:
+    #    record = json.load(f)
+    # loss1 = record['loss1']
+    # loss2 = record['loss2']
+    # loss3 = record['loss_fake']
+    # acc1 = record['acc1']
+    # acc2 = record['acc2']
+    # acc3 = record['acc_fake']
+    # losses = [loss1, loss2, loss3, losses1, losses2, losses3, losses4]
+    # accs = [acc1, acc2, acc3, acces1, acces2, acces3, acces4]
+    # draw_all(losses, accs)

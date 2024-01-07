@@ -70,14 +70,8 @@ def base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer,model2, model
             train_loss += loss.item()
             train_acc += torch.sum((torch.argmax(output, dim=1) == target).float()).item()
         losses.append(train_loss / len(train_loader))  # 计算并保存每个epoch的平均损失
+        # print(loss)
         acc.append(train_acc / len(train_loader))
-        # if (epoch + 1) % SAVE_EVERY == 0 and epoch > 50:  # 每隔SAVE_EVERY个epoch保存一次模型
-        #     cur_acc = get_val_acc(val_loader, model1, model2, DEVICE)
-        #     if cur_acc > best:
-        #         model1_path = os.path.join('./models2/', name+'_model1_best.pth')
-        #         torch.save(model1.state_dict(), model1_path)
-        #         model2_path = os.path.join('./models2/', name+'_model2_best.pth')
-        #         torch.save(model2.state_dict(), model2_path)
     return losses, acc, model1, model2
 
 def free_data(*args):
