@@ -118,6 +118,7 @@ All members contributed equally to the project. Specifically, Li Hao led the ove
 
 ### Running Instructions
 ```
+# Please ensure that folder "processed_data" and folder "src" are in the same parent directory. And the subdirectories of folder "processed_data" are "train", "test" and "val". 
 cd src
 python main.py --model 1/2/3 --json_name file_name 
 # There are three models: 0 is training model, 1 is run test model which will generate res.txt, 2 is evaluation model which will generate the pictures of loss and accuracy.

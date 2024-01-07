@@ -1,21 +1,21 @@
-from dataset import HandwrittenDigitsDataset
-from CNN_model import CnnM
-from mlp_model import MLP
-import json
-from utils import *
-from DRO import *
-from torch.utils.data import DataLoader
-from test_dataset import TestDataset
 import argparse
+import json
+from CNN_model import CnnM
+from DRO import *
+from dataset import HandwrittenDigitsDataset
+from mlp_model import MLP
+from test_dataset import TestDataset
+from utils import *
 
 # Set hyperparameters
 BATCH_SIZE = 100
 LEARNING_RATE = 0.001
-NUM_EPOCHS = 60 # used for base models and representation training in train4()
-DRO_NUM_EPOCH = 400 # used for DRO training in train3() and train4()
+NUM_EPOCHS = 60  # used for base models and representation training in train4()
+DRO_NUM_EPOCH = 400  # used for DRO training in train3() and train4()
 WEIGHT_DECAY = 0.001
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 HIDDEN_DIM = 300
+
 
 def train1():
     """
@@ -41,6 +41,7 @@ def train1():
     save(model1, model2, name, val_loader, DEVICE)
     return losses, acc
 
+
 def train2():
     """
         Train a model with data preprocessing: shuffling the first dimension.
@@ -65,6 +66,7 @@ def train2():
     save(model1, model2, name, val_loader, DEVICE)
     return losses, acc
 
+
 def train_fake():
     """
        Train fake model without data preprocessing.
@@ -77,7 +79,7 @@ def train_fake():
     model1 = CnnM(input_channel=10, hidden_dim=HIDDEN_DIM).to(DEVICE)
     model2 = MLP(input_dim=HIDDEN_DIM, output_dim=10).to(DEVICE)
     train_dataset = HandwrittenDigitsDataset('../processed_data/train', transform=IdentityTransform())
-    val_dataset = HandwrittenDigitsDataset("../processed_data/val",transform=IdentityTransform())
+    val_dataset = HandwrittenDigitsDataset("../processed_data/val", transform=IdentityTransform())
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
     optimizer = torch.optim.Adam(list(model1.parameters()) + list(model2.parameters()), lr=LEARNING_RATE,
@@ -89,6 +91,7 @@ def train_fake():
     # save model
     save(model1, model2, name, val_loader, DEVICE)
     return losses, acc
+
 
 def train3():
     """
@@ -119,9 +122,9 @@ def train3():
     model4 = MLP(input_dim=300, output_dim=10).to(DEVICE)
     models = [model3, model4]
     optimizer2 = torch.optim.Adam(list(model3.parameters()) + list(model4.parameters()), lr=LEARNING_RATE,
-                                 weight_decay=WEIGHT_DECAY)
+                                  weight_decay=WEIGHT_DECAY)
     losses2, acces2, model3, model4 = dro_train_process(loaders, models, optimizer2, DEVICE, DRO_NUM_EPOCH)
-    save(model3, model4, name+"v2", val_loader, DEVICE)
+    save(model3, model4, name + "v2", val_loader, DEVICE)
     return losses1, losses2, acces1, acces2
 
 
@@ -156,16 +159,16 @@ def train4():
 
     optimizer2 = torch.optim.Adam(list(model1.parameters()), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
     model3 = train_presentation(loaders, model1, optimizer2, DEVICE, NUM_EPOCHS)
-    
+
     del all_correct_datasets, all_wrong_datasets, loaders
-    
+
     loaders = get_clusters(model3, train_loader, DEVICE)
-    
+
     del model3
-    
+
     model1.load_state_dict(torch.load('./models/type_fake_final_model1.pth', map_location=DEVICE))
     optimizer3 = torch.optim.Adam(list(model1.parameters()) + list(model2.parameters()), lr=LEARNING_RATE,
-                                 weight_decay=WEIGHT_DECAY)
+                                  weight_decay=WEIGHT_DECAY)
     models = [model1, model2]
     losses1, acces1, model1, model2 = dro_train_process(loaders, models, optimizer3, DEVICE, DRO_NUM_EPOCH)
     save(model1, model2, name + "v1", val_loader, DEVICE)
@@ -174,7 +177,7 @@ def train4():
     model4 = CnnM(input_channel=10, hidden_dim=300).to(DEVICE)
     model5 = MLP(input_dim=300, output_dim=10).to(DEVICE)
     optimizer4 = torch.optim.Adam(list(model4.parameters()) + list(model5.parameters()), lr=LEARNING_RATE,
-                                 weight_decay=WEIGHT_DECAY)
+                                  weight_decay=WEIGHT_DECAY)
     models = [model4, model5]
     losses2, acces2, model4, model5 = dro_train_process(loaders, models, optimizer4, DEVICE, DRO_NUM_EPOCH)
 
@@ -217,6 +220,7 @@ def train_first(file_name):
         f.write('\n')
     return loss1, loss2, loss3, acc1, acc2, acc3
 
+
 def train_last(file_name):
     """
        Train and record results for train3(), train4().
@@ -249,6 +253,7 @@ def train_last(file_name):
         f.write('\n')
     return losses1, losses2, losses3, losses4, acces1, acces2, acces3, acces4
 
+
 def res_show(file_path):
     """
        This function reads a JSON file containing training metrics and prepares the data to be visualized.
@@ -267,25 +272,27 @@ def res_show(file_path):
        - `acces1`, `acces2`, `acces3`, `acces4` are lists of epoch-wise accuracies scaled by 100.
     """
     with open("{}.json".format(file_path), 'r') as f:
-       record = json.load(f)
+        record = json.load(f)
     loss1 = record['loss1']
     loss2 = record['loss2']
     loss3 = record['loss_fake']
     acc1 = record['acc1']
     acc2 = record['acc2']
     acc3 = record['acc_fake']
-    losses1 = [i*100 for i in record['losses1']]
-    losses2 = [i*100 for i in record['losses2']]
-    losses3 = [i*100 for i in record['losses3']]
-    losses4 = [i*100 for i in record['losses4']]
-    acces1 = [i*100 for i in record['acces1']]
-    acces2 = [i*100 for i in record['acces2']]
-    acces3 = [i*100 for i in record['acces3']]
-    acces4 = [i*100 for i in record['acces4']]
+    losses1 = [i * 100 for i in record['losses1']]
+    losses2 = [i * 100 for i in record['losses2']]
+    losses3 = [i * 100 for i in record['losses3']]
+    losses4 = [i * 100 for i in record['losses4']]
+    acces1 = [i * 100 for i in record['acces1']]
+    acces2 = [i * 100 for i in record['acces2']]
+    acces3 = [i * 100 for i in record['acces3']]
+    acces4 = [i * 100 for i in record['acces4']]
     losses = [loss1, loss2, loss3, losses1, losses2, losses3, losses4]
     accs = [acc1, acc2, acc3, acces1, acces2, acces3, acces4]
     # After processing the data from the JSON file, both losses and accuracies are passed to `draw_all` for visualization.
     draw_all(losses, accs)
+
+
 def test_res():
     """
        This function loads previously trained models (CnnM and MLP) from their saved state dictionaries,
@@ -304,15 +311,15 @@ def test_res():
     model2 = MLP(input_dim=HIDDEN_DIM, output_dim=10).to(DEVICE)
     model_path = './models/type4v2_final_model'
     test_dataset = TestDataset('../processed_data/test')
-    test_loader = DataLoader(test_dataset,batch_size=BATCH_SIZE, shuffle=False)
-    model1.load_state_dict(torch.load(model_path+'1.pth', map_location=DEVICE))
-    model2.load_state_dict(torch.load(model_path+'2.pth', map_location=DEVICE))
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    model1.load_state_dict(torch.load(model_path + '1.pth', map_location=DEVICE))
+    model2.load_state_dict(torch.load(model_path + '2.pth', map_location=DEVICE))
     model1.eval()
     model2.eval()
     with open("../res.txt", 'w') as f:
         with torch.no_grad():
             for batch_idx, (data, target) in enumerate(test_loader):  # 迭代加载数据
-                data = data.to(DEVICE) # 将数据转移到正确的设备上
+                data = data.to(DEVICE)  # 将数据转移到正确的设备上
                 outputs = model2(model1(data))
                 res = torch.argmax(outputs, dim=1)
                 for i, j in zip(res, target):
@@ -320,6 +327,7 @@ def test_res():
                     f.write(" ")
                     f.write(str(int(i)))
                     f.write('\n')
+
 
 def get_parser():
     """
@@ -331,6 +339,8 @@ def get_parser():
     parser.add_argument('--json_name', type=str, default='LossAndAcc')
 
     return parser
+
+
 if __name__ == "__main__":
     # Parse command line arguments
     parser = get_parser()
@@ -345,7 +355,7 @@ if __name__ == "__main__":
         test_res()
     elif args.model == 0:
         # Train the models and visualize the training progress
-        loss1, loss2, loss3, acc1, acc2, acc3 = train_first(json_path+args.josn_name)
+        loss1, loss2, loss3, acc1, acc2, acc3 = train_first(json_path + args.josn_name)
         losses1, losses2, losses3, losses4, acces1, acces2, acces3, acces4 = train_last(json_path + args.josn_name)
         losses = [loss1, loss2, loss3, losses1, losses2, losses3, losses4]
         accs = [acc1, acc2, acc3, acces1, acces2, acces3, acces4]
@@ -353,4 +363,3 @@ if __name__ == "__main__":
     elif args.model == 2:
         # Load and visualize results from a JSON file
         res_show(json_path + args.josn_name)
-

@@ -1,8 +1,8 @@
+import os
+
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-from torchvision import transforms
-import os
 
 
 class TestDataset(Dataset):
@@ -22,6 +22,7 @@ class TestDataset(Dataset):
             data (list): List of loaded and converted torch tensors from .npy files.
             target (list): List of file names corresponding to each tensor in 'data'.
     """
+
     def __init__(self, root_dir, transform=None, odd=False, even=False):
         self.root_dir = root_dir
         self.transform = transform

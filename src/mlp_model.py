@@ -15,6 +15,7 @@ class MLP(nn.Module):
             dropout (nn.Dropout): Dropout layer for regularization to prevent overfitting.
             fc (nn.Linear): Fully connected linear layer for transforming input features into logits.
     """
+
     def __init__(self, input_dim, output_dim):
         # Initialize the parent nn.Module class
         super(MLP, self).__init__()

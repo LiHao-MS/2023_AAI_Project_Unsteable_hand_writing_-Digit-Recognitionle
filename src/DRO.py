@@ -1,12 +1,13 @@
-import torch
-from torch.utils.data import TensorDataset, DataLoader
 from collections import defaultdict
-from utils import compute_l2
-from sklearn import metrics
-from sklearn.cluster import k_means
+
 import numpy as np
+import torch
 import torch.nn.functional as F
-from collections import Counter
+from sklearn.cluster import k_means
+from torch.utils.data import TensorDataset, DataLoader
+
+from utils import compute_l2
+
 
 def get_all_class_loaders(models, dataloader, DEVICE):
     """
@@ -76,7 +77,7 @@ def get_all_class_loaders(models, dataloader, DEVICE):
     return all_correct_datasets, all_wrong_datasets
 
 
-def get_two_class_loaders(models, dataloader, DEVICE,BATCH_SIZE):
+def get_two_class_loaders(models, dataloader, DEVICE, BATCH_SIZE):
     """
         This function takes in two models from a list, a dataloader, the device (CPU or GPU), and the batch size.
         It evaluates both models and combines them into a single model pipeline. It then separates the data
@@ -133,6 +134,7 @@ def get_two_class_loaders(models, dataloader, DEVICE,BATCH_SIZE):
 
     return correct_dataloader, wrong_dataloader
 
+
 def train_presentation(train_loaders, model, opt, DEVICE, NUM_EPOCHS):
     """
         This function takes in a list of dataloaders, a model, an optimizer, a device, and the number of epochs.
@@ -156,9 +158,9 @@ def train_presentation(train_loaders, model, opt, DEVICE, NUM_EPOCHS):
     for epoch in range(NUM_EPOCHS):
         for batches in zip(*train_loaders):
             # work on each batch
-            for i in range(n_group_pairs//2):
-                pos_data, pos_label = batches[i*2]
-                neg_data, neg_label = batches[i * 2+1]
+            for i in range(n_group_pairs // 2):
+                pos_data, pos_label = batches[i * 2]
+                neg_data, neg_label = batches[i * 2 + 1]
                 pos_data, neg_data = pos_data.to(DEVICE), neg_data.to(DEVICE)
 
                 min_size = min(len(pos_data), len(neg_data))
@@ -173,8 +175,8 @@ def train_presentation(train_loaders, model, opt, DEVICE, NUM_EPOCHS):
 
                 loss = (
                     torch.mean(torch.max(torch.zeros_like(diff_pos_pos),
-                                        diff_pos_pos - diff_pos_neg +
-                                        torch.ones_like(diff_pos_pos) * 0.3)))
+                                         diff_pos_pos - diff_pos_neg +
+                                         torch.ones_like(diff_pos_pos) * 0.3)))
                 loss.backward()
             opt.step()
             opt.zero_grad()
@@ -204,7 +206,7 @@ def get_clusters(model, dataloader, DEVICE):
             y_s = target.detach().cpu().numpy()
             for x, y, da in zip(x_s, y_s, data):
                 if int(y) not in groups:
-                    groups[int(y)] = {"encoder":[], "data":[]}
+                    groups[int(y)] = {"encoder": [], "data": []}
                 groups[int(y)]["encoder"].append(x)
                 groups[int(y)]["data"].append(da)
     dataloaders = []
@@ -253,7 +255,7 @@ def dro_train_process(train_loaders, models, opt, DEVICE, NUM_EPOCHS):
     model1 = models[0]
     model2 = models[1]
 
-   # Iterate over the epochs
+    # Iterate over the epochs
     for num in range(NUM_EPOCHS):
         cur_loss = 0
         cur_acc = 0
@@ -277,7 +279,7 @@ def dro_train_process(train_loaders, models, opt, DEVICE, NUM_EPOCHS):
             worst_loss = 0
             cur_idx = 0
             for cur_true in y:
-                cur_pred = pred[cur_idx:cur_idx+cur_true.shape[0]]
+                cur_pred = pred[cur_idx:cur_idx + cur_true.shape[0]]
                 cur_idx += len(cur_true)
                 loss = F.cross_entropy(cur_pred, cur_true.long())
                 if loss.item() > worst_loss:
@@ -294,5 +296,3 @@ def dro_train_process(train_loaders, models, opt, DEVICE, NUM_EPOCHS):
         acces.append(cur_acc / cur_len)
 
     return losses, acces, model1, model2
-
-

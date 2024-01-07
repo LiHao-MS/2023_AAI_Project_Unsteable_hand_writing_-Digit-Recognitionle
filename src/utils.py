@@ -1,9 +1,6 @@
-import torch
-import numpy as np
-import os
 import matplotlib.pyplot as plt
-from torch.utils.data import Dataset
-from torchvision import transforms
+import numpy as np
+import torch
 
 
 # Custom data transformation class: Sums over the first dimension (channels) to create a 28x28 tensor
@@ -27,6 +24,7 @@ class IdentityTransform(object):
     def __call__(self, tensor):
         return tensor
 
+
 def compute_acc(pred, true):
     '''
     Function to compute accuracy.
@@ -39,6 +37,7 @@ def compute_acc(pred, true):
         float: Accuracy value.
     '''
     return torch.mean((torch.argmax(pred, dim=1) == true).float()).item()
+
 
 def get_val_acc(val_loader, model1, model2, DEVICE):
     '''
@@ -66,7 +65,8 @@ def get_val_acc(val_loader, model1, model2, DEVICE):
             total += target.size(0)  # 累加总样本数
     return correct / total
 
-def base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer,model2, model1, criterion):
+
+def base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer, model2, model1, criterion):
     '''
        Function to perform the basic training process for multiple epochs.
 
@@ -104,6 +104,7 @@ def base_train_process(NUM_EPOCHS, train_loader, DEVICE, optimizer,model2, model
         acc.append(train_acc / len(train_loader))
     return losses, acc, model1, model2
 
+
 def free_data(*args):
     '''
         Function to free memory by setting variables to None.
@@ -114,6 +115,7 @@ def free_data(*args):
 
     for i in args:
         i = None
+
 
 def save(model1, model2, name, val_loader, DEVICE):
     '''
@@ -132,6 +134,7 @@ def save(model1, model2, name, val_loader, DEVICE):
     print(name + "final acc:{}".format(final_acc))
     free_data(model1, model2)
 
+
 def compute_l2(XS, XQ):
     '''
         Function to compute pairwise L2 distance between sets of vectors.
@@ -148,6 +151,7 @@ def compute_l2(XS, XQ):
 
     return dist ** 2
 
+
 def draw_pic(*args, name):
     '''
        Function to plot and save figures comparing multiple loss/accuracy curves.
@@ -156,7 +160,7 @@ def draw_pic(*args, name):
            *args: Alternating sequence of loss arrays and curve names.
            name (str): Base name for the saved figure file.
     '''
-    length = len(args)//2
+    length = len(args) // 2
     losses = args[:length]
     names = args[length:]
     # create a new figure
@@ -191,18 +195,19 @@ def draw_all(losses, accs):
              name="BASE_DRO_MODELS_LOSS")
     draw_pic(acc3, acces1, acces2, "FAKE MODEL", "DRO MODEL1", "DRO MODEL2",
              name="BASE_DRO_MODELS_ACCURACY")
-    draw_pic(loss1, loss2, loss3, losses1, losses2, "BASE MODEL1", "BASE MODEL2", "FAKE MODEL", "DRO MODEL1", "DRO MODEL2",
+    draw_pic(loss1, loss2, loss3, losses1, losses2, "BASE MODEL1", "BASE MODEL2", "FAKE MODEL", "DRO MODEL1",
+             "DRO MODEL2",
              name="COMPARE_MODELS_LOSS")
     draw_pic(acc1, acc2, acc3, acces1, acces2, "BASE MODEL1", "BASE MODEL2", "FAKE MODEL", "DRO MODEL1", "DRO MODEL2",
              name="COMPARE_MODELS_ACCURACY")
 
     draw_pic(loss3, losses3, losses4, "FAKE MODEL", "DRO MODEL1", "DRO MODEL2", name="DRO MODELS' LOSS")
     draw_pic(acc3, acces3, acces4, "FAKE MODEL", "DRO MODEL1", "DRO MODEL2", name="DRO MODELS' ACCURACY")
-    draw_pic(loss1, loss2, loss3, losses1, losses2, losses3, losses4, "BASE MODEL1", "BASE MODEL2", "FAKE MODEL", "DRO MODEL1",
+    draw_pic(loss1, loss2, loss3, losses1, losses2, losses3, losses4, "BASE MODEL1", "BASE MODEL2", "FAKE MODEL",
+             "DRO MODEL1",
              "BASE DRO MODEL2", "TOFU MODEL1", "TOFU MODEL2",
              name="COMPARE_ALL_MODELS_LOSS")
-    draw_pic(acc1, acc2, acc3, acces1, acces2, acces3, acces4, "BASE MODEL1", "BASE MODEL2",  "FAKE MODEL", "DRO MODEL1", "DRO MODEL2",
+    draw_pic(acc1, acc2, acc3, acces1, acces2, acces3, acces4, "BASE MODEL1", "BASE MODEL2", "FAKE MODEL", "DRO MODEL1",
+             "DRO MODEL2",
              "TOFU MODEL1", "TOFU MODEL2",
              name="COMPARE_ALL_MODELS_ACCURACY")
-
-

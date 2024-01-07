@@ -1,6 +1,6 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch
 
 
 class CnnM(nn.Module):
@@ -25,6 +25,7 @@ class CnnM(nn.Module):
       Methods:
           forward(x): Defines the forward pass through the network.
       """
+
     def __init__(self, input_channel, hidden_dim):
         super(CnnM, self).__init__()
         self.conv1 = nn.Conv2d(input_channel, 32, 3, 1, padding=0)
@@ -33,8 +34,7 @@ class CnnM(nn.Module):
         self.conv3 = nn.Conv2d(64, 32, 3, 1, padding=0)
         self.dropout1 = nn.Dropout(0.1)
 
-        self.fc1 = nn.Linear(64*12*12, hidden_dim)
-
+        self.fc1 = nn.Linear(64 * 12 * 12, hidden_dim)
 
     def forward(self, x):
         """

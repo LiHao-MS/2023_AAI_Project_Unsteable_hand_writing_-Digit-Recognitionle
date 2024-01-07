@@ -1,8 +1,8 @@
+import os
+
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-from torchvision import transforms
-import os
 
 
 class HandwrittenDigitsDataset(Dataset):
@@ -33,6 +33,7 @@ class HandwrittenDigitsDataset(Dataset):
            __len__(): Returns the number of samples in the dataset.
            __getitem__(idx): Retrieves the i-th sample and its label from the dataset.
     """
+
     def __init__(self, root_dir, transform=None, odd=False, even=False):
         self.root_dir = root_dir
         self.transform = transform
