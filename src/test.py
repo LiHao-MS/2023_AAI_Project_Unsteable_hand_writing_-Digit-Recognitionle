@@ -64,4 +64,4 @@ def get_acc_loss():
     print('type4v2_acc_val:', type4v2_acc_val)
 
 if __name__ == "__main__":
-    pass
+    get_acc_loss()
