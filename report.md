@@ -1,16 +1,16 @@
 # AAI PROJECTl BY DRO
 ## purpose
-Train a model for handwritten digits recognition. 
+The primary goal of this project is to train a model capable of recognizing handwritten digits in the presence of intentionally mislabeled and mutated data.
 
 ## Data
-Mutated handwritten digits, in the form of 10*28*28 npy files. There are 60000 'npz' files with labels in training set, 100 'npz' files with lables in val set and 9900 'npz' files without labels in test set..The data is filled with misdirection. The data is derived from variations of the data in the MNIST database, where each file has a 10-dimensional structure. In files labeled 'i' (i in 0-9), the i-th dimension should contain the corresponding handwritten digit 'i', while the other dimensions are blank. However, there are intentionally mislabeled files; under label 'i', instead of the i-th dimension containing digit 'i', it contains a different digit, thus introducing errors.
+Our dataset consists of 60,000 'npz' files for training, each containing 10x28x28 arrays with labels. The validation set has 100 labeled 'npz' files, while the test set contains 9900 unlabeled 'npz' files. Derived from the MNIST database, these data have been manipulated such that they include intentional errors. Each file is structured as a 10-dimensional array where, under normal circumstances, the i-th dimension in a file labeled 'i' (for i ranging from 0-9) should contain the corresponding digit 'i'. However, there are deliberately mislabeled files where other digits replace the expected digit 'i'.
 
 ## Models
 
 ### Models Selection
-According to [3], convolutional neural network (CNN) shows good performence in recognition on words. So we choose CNN as base model and for reduce the effect of the peripheral region, padding is set as 0. Comparing between [1] and [2], we finally choose [1]’s strategy for this project. The two papers mention to two regions: Invariant Risk Minimization (IRM) and Distributionally Robust Optimization (DRO). IRM focus on the datasets with different backgrounds or unstable features. DRO focus on minimizing the risk of data in worst situation. Specifically, in [1], this paper tries to learn stable features in the target task by learning unstable features from source task. So the strategy of [1] is more suitable for this task leaning stable feature of data. 
+Based on [3], convolutional neural networks (CNNs) exhibit strong performance in recognizing handwritten digits. Hence, we chose a CNN with padding set to 0 to minimize the impact of peripheral regions. Upon comparing [1] and [2], we adopted [1]'s strategy for this project due to its focus on learning stable features. IRM (Invariant Risk Minimization) and DRO (Distributionally Robust Optimization) are two concepts mentioned; IRM deals with datasets having varying backgrounds or unstable features, whereas DRO aims to minimize risk under worst-case scenarios. In [1], the authors attempt to learn stable features for the target task by leveraging unstable features from a source task, making their approach particularly suitable for our task.
 
-According to [1] and [3], we also have two models: CNN and MLP. The real structures of two model are showed in following code, the hidden_dim is 300 in default. And in following report, **the two models will be regarded as one model**.
+We employ two models, CNN and MLP, as described in [1] and [3]. Their detailed structures are shown below, with the default hidden_dim being 300. Throughout this report, **the two models will be considered as one unified model.**
 ```
 class CNN(nn.Module)
     def __init__(self, input_channel, hidden_dim):
@@ -20,8 +20,7 @@ class CNN(nn.Module)
     self.dropout1 = nn.Dropout(0.1)
     self.fc1 = nn.Linear(64*12*12, hidden_dim)
     ...
-```
-```
+
 class MLP(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(MLP, self).__init__()
@@ -30,34 +29,36 @@ class MLP(nn.Module):
     ...
 ```
 ###	Strategies selection
-Distributionally Robust Optimization (DRO) is a mathematical optimization framework that deals with decision-making under uncertainty. Unlike traditional optimization methods which rely on a single, precise probabilistic model of the underlying data distribution, DRO takes into account a set of possible distributions that are close to or consistent with the available empirical data.
+Distributionally Robust Optimization (DRO) is an optimization framework designed for decision-making under uncertainty. Unlike traditional methods that rely on a single, precise probabilistic model, DRO considers a set of plausible distributions consistent with empirical data.
 
-In essence, DRO aims to find solutions that perform well across this entire ambiguity set of distributions rather than just optimizing for the best-case scenario based on a point estimate. This approach enhances the robustness of the solution against potential inaccuracies in the estimated probability distribution, thereby providing a safeguard against model misspecification and changes in the data-generating process. 
-Formally, the goal in DRO is to minimize the worst-case expected loss over an uncertainty set of probability distributions. This approach enhances the robustness of the solution against potential inaccuracies in the estimated probability distribution, thereby providing a safeguard against model misspecification and changes in the data-generating process. But the biggest problem is finding how to cluster data. **A simple strategy is enhancing learning on wrong predicted data**. But it generally not performs very good. **So [1] proposes a method for clustering called TOFU**. And there are **two ways for training on classified data: basing on trained model which learning unstable feature and basing on random model**. 
+In essence, DRO seeks solutions that perform well across all distributions within an ambiguity set rather than optimizing solely for the best-case scenario based on point estimates. This robustness protects against potential inaccuracies in the estimated probability distribution and enhances model resilience against misspecification and changes in the data-generating process.
 
-And there is no doubt, we want to get a model recognizing the digits with dimensional interference suppression. So there is a natural thought is to proactively exclude interference in data processing. But TAs (Teaching Assistants) refute this idea. Final, we choose training two models following the natural thought as base models to show we get a model which could recognize digit with elimination of dimensional interference. One model’s data preprocessing is **reducing the dimensions into one dimension by adding all dimensions into one dimension**. The input data for model is 28x28 tensor. The other model’s preprocessing is **shuffling the first dimension**. The input data for model is 10x28x28 tensor. We predict the two models with similar performance.
-In order to validate that the effective of DRO and [1]'s strategy is indeed more effective than conventional DRO and, we train two models basing in simple DRO strategy and two models basing on TOFU strategy.
+[1] introduces TOFU, a clustering method, as an effective way to handle uncertain data clusters. For training on classified data, we consider two approaches: initializing the model with weights learned from unstable features and initializing with random weights.
 
-So, there are 6 models and one fake model which learning unstable features. 
+To address dimensional interference suppression, we initially entertained the idea of proactively excluding interference during data preprocessing. However, the TAs advised against this, leading us to train two base models based on this natural thought — one reducing dimensions to one by summing them up and another shuffling the first dimension.
+
+For evaluation, we trained six models: two base models, one fake model learning unstable features, and four models using either simple DRO or TOFU strategies. 
 
 |Models|Strategies|Data Preprocess|Objective|
 |:---|:----|:----|:----|
 |Base Model 1| Normal| Dimension Reduction| Get stable features|
 |Base Model 2| Normal| First Dimension Shuffle| Get stable features|
 |Fake Model 1| Normal| No | Get unstable features|
-|DRO Model 1| simpel DRO; init with fake model| No | Get stable features|
-|DRO Model 2| simpel DRO; init with random model| No | Get stable features|
-|TOFU Model 1| TOFU; init with fake model| No | Get stable features|
-|TOFU Model 2| TOFU; init with random model| No | Get stable features|
+|DRO Model 1| Simpel DRO; Init with fake model| No | Get stable features|
+|DRO Model 2| Simpel DRO; Init with random model| No | Get stable features|
+|TOFU Model 1| TOFU; Init with fake model| No | Get stable features|
+|TOFU Model 2| TOFU; Init with random model| No | Get stable features|
 
 ## Experiment 
 
 ### Base models and fake model
-Firstly, we train three simple models: Base Model 1,2 and Fake Model in 60 epoches. In our design, two base models should recognize digits without the interference of unstable features by data preproceessing.
+
+Firstly, we trained three basic models—Base Models 1 & 2 and the Fake Model — for 60 epochs. The base models were designed to recognize digits without interference from unstable features through data preprocessing.
 
 <img src="./pics/BASE%20MODELS%20LOSS.png" width="45%" style="float: left; margin-right: 10px;">
 <img src="./pics/BASE%20MODELS%20ACCURACY.png" width="45%" style="float: left;">
 <br style="clear: both;">
+</br>
 
 |models|accuracy on val dataset|
 |---|---|
@@ -65,40 +66,47 @@ Firstly, we train three simple models: Base Model 1,2 and Fake Model in 60 epoch
 |Base Model 2|0.76|
 |Fake Model |0.15|
 
-By the two pictures and table, we could see Fake Model has hightest accuracy in training set and lowest accuracy on val set which shows it overfits on straining set and learns unstable features. The good performents of two base model shows the unstable feature is the first dimension relation lables.
+From the graphs and table, it's evident that the Fake Model overfits to the training set and learns unstable features, as seen by its high training accuracy and low validation accuracy. The good performance of the base models suggests that the first dimension indeed carries unstable feature-label relations.
+
+Simple DRO Strategy
 
 ### Simple DRO Strategy
-Next, we trains the models with simple DRO strategy in 400 epoches . In DRO, it focus on the worst loss among all classes of data. So, the loss recorded and accuracy recorded are the worst loss and accuracy of one class of data in each epoch. *This is same on TOFU Model 1 and 2*.
 
-<img src="./pics/BASE DRO MODELS&apos; LOSS.png" width="45%" style="float: left; margin-right: 10px;">
-<img src="./pics/BASE DRO MODELS&apos; ACCURACY.png" width="45%" style="float: left;">
+Next, we trained models with a simple DRO strategy for 400 epochs. Under DRO, we focused on the worst loss among all classes of data and only worst loss and accuracy are recorded in each epoch. *This applies to TOFU Model 1 and 2 as well.*
+
+<img src="./pics/BASE DRO MODELS&apos; LOSS.png" width="46%" style="float: left; margin-right: 10px;">
+<img src="./pics/BASE DRO MODELS&apos; ACCURACY.png" width="46%" style="float: left;">
 <br style="clear: both;">
+</br>
 
 |models|accuracy on val dataset|
 |---|---|
 |DRO Model 1|0.36|
 |DRO Model 2|0.35|
 
-The pictures and table shows the simple DRO strategy just make small progress on learning stable features than Fake Model. Overall, it still mainly learns unstable feature.
+The results show that the simple DRO strategy only marginally improves the learning of stable features compared to the Fake Model, still predominantly learning unstable features.
 
 ### TOFU Strategy
-By TOFU, we firstly get all classes of data: 20 data sets in the order: data set of predicted correct data by Fake Model on labe 1 and data set predicted wrong data by Fake Model on labe 1 ... Then enchan the representation difference on differant classes and similarity on same class. Thirdly, we cluster these data into 20 clusters: each label with two clusters by K-means algorithm provided by scikit-learn package. So we get all clusters of data. Then train with DRO strategy.
+
+With TOFU, we processed the data into 20 datasets based on correct and incorrect predictions by the Fake Model, enhancing representation differences between classes and similarities within classes. We then clustered these data into 20 clusters using K-means from scikit-learn, ensuring each label had two clusters. Finally, we trained the clusters using the DRO strategy.
 
 <img src="./pics/COMPARE ALL MODELS&apos; LOSS.png" width="45%" style="float: left; margin-right: 10px;">
 <img src="./pics/COMPARE ALL MODELS&apos; ACCURACY.png" width="45%" style="float: left;">
 <br style="clear: both;">
+</br>
 
 |models|accuracy on val dataset|
 |---|---|
 |TOFU Model 1|0.63|
 |TOFU Model 2|0.75|
 
-The pictures and tables, shows that we get TOFU models which recognizing the digits with dimensional interference suppression. And TOFU Model 2 perform better than TOFU Model 1. We should trains final model inited by random insteal of the model learning unstable feature.
+The graphs and tables demonstrate that the TOFU models successfully recognized digits with dimensional interference suppression. TOFU Model 2 outperformed TOFU Model 1, indicating that initializing with random weights was more effective than using a model that learned unstable features.
 
-## Member Contribution
-Overall, all members contribute equally. In terms of specific tasks, Li Hao is responsible for determining the overall strategy and conducting experiments, Jiang Tao takes charge of the actual implementation of the code, and Yuan Fei is in charge of writing reports.
+## Member Contributions
 
-## reference
+All members contributed equally to the project. Specifically, Li Hao led the overall strategy and conducted experiments, Jiang Tao implemented the code, and Yuan Fei wrote the reports.
+
+## References
 [1] Bao, Yujia, Shiyu Chang, and Regina Barzilay. "Learning stable classifiers by transferring unstable features." International Conference on Machine Learning. PMLR, 2022.
 
 [2] Arjovsky, Martin, et al. "Invariant risk minimization." arXiv preprint arXiv:1907.02893 (2019).
@@ -106,10 +114,11 @@ Overall, all members contribute equally. In terms of specific tasks, Li Hao is r
 [3] LeCun, Yann, et al. "Gradient-based learning applied to document recognition." Proceedings of the IEEE 86.11 (1998): 2278-2324.
 
 ## Appendix
-|sets|detail|
+|Sets|Detail|
 |---|---|
-|optimizer|Adam with 0.001 as wight decay|
-|learning rate| 0.001|
-|Activate function of CNN|relu|
-|activate function of MLP|log_softmax|
-|drop out rate|0.1|
+|Optimizer|Adam with 0.001 as wight decay|
+|Learning Rate| 0.001|
+|Activate Function of CNN|relu|
+|activate Function of MLP|log_softmax|
+|Drop Out Rate|0.1|
+|Python|3.10|
